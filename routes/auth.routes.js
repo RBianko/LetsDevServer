@@ -6,9 +6,9 @@ const { check, validationResult } = require('express-validator')
 const User = require('../models/User')
 const router = Router()
 
-// /api/auth
+// /api/login
 router.post(
-    '/register',
+    '/registration',
     [
         check('email', 'Email is not correct').isEmail(),
         check('password', 'Password is not correct').isLength({ min: 6 })
@@ -41,8 +41,8 @@ router.post(
         }
     })
 
-// /api/auth
-router.post('/login',
+// /api/login
+router.post('/authorization',
     [
         check('email', 'Enter correct Email').normalizeEmail().isEmail(),
         check('password', 'Enter correct Password').exists()
