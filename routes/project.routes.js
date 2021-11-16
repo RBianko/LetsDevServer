@@ -14,8 +14,8 @@ router.post('/create', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const project = await Project.find({ creator: null })
-        res.json(project)
+        const projects = await Project.findAll()
+        res.json(projects)
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -29,7 +29,5 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ message: error.message })
     }
 })
-
-
 
 module.exports = router
