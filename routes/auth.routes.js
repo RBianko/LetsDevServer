@@ -79,7 +79,6 @@ router.post('/authorization',
             )
 
             res.json({ token, userId: user.id })
-
         } catch (error) {
             res.status(500).json({ message: error.message })
         }
