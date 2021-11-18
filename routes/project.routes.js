@@ -1,6 +1,5 @@
 const { Router } = require('express')
 const Project = require('../models/Project')
-const Projects = require('../models/Projects')
 const router = Router()
 
 router.use(function (req, res, next) {
@@ -53,9 +52,9 @@ router.get('/all', async (req, res) => {
 })
 
 // api/projects/:id
-router.get('/:id', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
-        const project = await Project.findById(req.params.id)
+        const project = await Project.findById(req.query.id)
         res.json(project)
     } catch (error) {
         res.status(500).json({ message: error.message })
