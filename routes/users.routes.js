@@ -8,9 +8,8 @@ router.use(function (req, res, next) {
     next();
 });
 
-
 // api/users/update
-router.post('/update', async (req, res) => {
+router.put('/update', (req, res) => {
     try {
         const {
             userId,
@@ -25,8 +24,6 @@ router.post('/update', async (req, res) => {
             socials
         } = req.body
 
-        const user = await User.findById(userId)
-
         const user = {
             firstName,
             lastName,
@@ -39,7 +36,9 @@ router.post('/update', async (req, res) => {
             socials
         }
 
-        await user.save()
+        User.updateOne({ _id: userId }, { $set: user }, async (error) => {
+            if (error) return await res.status(200).json({ message: 'Error in update User!' })
+        })
 
         res.status(201).json({ message: 'User updated!' })
     } catch (error) {

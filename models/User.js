@@ -1,6 +1,10 @@
 const { Schema, model, Types } = require('mongoose')
 
 const schema = new Schema({
+    token: { type: String, required: false, unique: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+
     isLogedIn: { type: Boolean, required: false },
     firstName: { type: String, required: false },
     lastName: { type: String, required: false },
@@ -13,11 +17,6 @@ const schema = new Schema({
     skills: { type: Array, required: false },
     projects: { type: Array, required: false },
     socials: { type: Object, required: false },
-
-    userId: { type: String, required: true, unique: true },
-    token: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
 })
 
 module.exports = model('User', schema)
