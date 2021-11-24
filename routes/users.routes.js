@@ -5,6 +5,7 @@ const router = Router()
 router.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "http://localhost:3000");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Methods", "PUT, OPTIONS");
     next();
 });
 
@@ -12,32 +13,33 @@ router.use(function (req, res, next) {
 router.put('/update', (req, res) => {
     try {
         const {
-            userId,
             firstName,
             lastName,
             city,
             country,
-            Bio,
+            bio,
             roles,
             skills,
+            follow,
             profilePicture,
             socials
-        } = req.body
+        } = req.body.params.user
 
         const user = {
             firstName,
             lastName,
             city,
             country,
-            Bio,
+            bio,
             roles,
             skills,
+            follow,
             profilePicture,
             socials
         }
 
-        User.updateOne({ _id: userId }, { $set: user }, async (error) => {
-            if (error) return await res.status(200).json({ message: 'Error in update User!' })
+        User.updateOne({ id: req.body.id }, { $set: user }, async (error) => {
+            if (error) return await res.status(200).json({ message: 'Error in User.updateOne!' })
         })
 
         res.status(201).json({ message: 'User updated!' })
@@ -49,7 +51,7 @@ router.put('/update', (req, res) => {
 // api/users/all
 router.get('/all', async (req, res) => {
     try {
-        const users = await User.find()
+        const users = await User.find({}, { email: 0, password: 0, _v: 0 })
         res.json(users)
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -59,7 +61,7 @@ router.get('/all', async (req, res) => {
 // api/users/:id
 router.get('/', async (req, res) => {
     try {
-        const user = await User.findById(req.query.id)
+        const user = await User.find({ _id: req.query.id }, { email: 0, password: 0, __v: 0 })
         res.json(user)
     } catch (error) {
         res.status(500).json({ message: error.message })
