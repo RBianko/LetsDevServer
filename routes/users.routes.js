@@ -13,6 +13,7 @@ router.use(function (req, res, next) {
 router.put('/update', (req, res) => {
     try {
         const {
+            _id,
             firstName,
             lastName,
             city,
@@ -38,7 +39,7 @@ router.put('/update', (req, res) => {
             socials
         }
 
-        User.updateOne({ id: req.body.id }, { $set: user }, async (error) => {
+        User.updateOne({ _id }, { $set: user }, async (error) => {
             if (error) return await res.status(200).json({ message: 'Error in User.updateOne!' })
         })
 
