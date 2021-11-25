@@ -49,10 +49,16 @@ router.put('/update', (req, res) => {
     }
 })
 
-// api/users/all
-router.get('/all', async (req, res) => {
+// api/users/list
+router.get('/list', async (req, res) => {
     try {
-        const users = await User.find({}, { email: 0, password: 0, _v: 0 })
+        let users = []
+        if (req.query.ids) {
+            const idsArray = req.query.ids
+            users = await User.find({ _id: { $in: idsArray } }, { email: 0, password: 0, __v: 0 })
+        } else {
+            users = await User.find({}, { email: 0, password: 0, __v: 0 })
+        }
         res.json(users)
     } catch (error) {
         res.status(500).json({ message: error.message })

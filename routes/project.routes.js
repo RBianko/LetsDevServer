@@ -41,8 +41,8 @@ router.post('/create', async (req, res) => {
     }
 })
 
-// api/projects/all
-router.get('/all', async (req, res) => {
+// api/projects/list
+router.get('/list', async (req, res) => {
     try {
         const projects = await Project.find()
         res.json(projects)
