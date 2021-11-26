@@ -75,4 +75,30 @@ router.get('/', async (req, res) => {
     }
 })
 
+router.put('/follow', async (req, res) => {
+    try {
+        const {
+            followerId,
+            followingId,
+        } = req.body.params.ids
+
+        const follower = await User.find({ _id: followerId })
+        console.log(follower[0]);
+        const isFollowing = follower[0].follow.following.some(id => id === followingId)
+        console.log(isFollowing);
+
+        if (isFollowing) {
+            await User.updateOne({ _id: followerId }, { $pull: { "follow.following": followingId } })
+            await User.updateOne({ _id: followingId }, { $pull: { "follow.followers": followerId } })
+        } else {
+            await User.updateOne({ _id: followerId }, { $push: { "follow.following": followingId } })
+            await User.updateOne({ _id: followingId }, { $push: { "follow.followers": followerId } })
+        }
+
+        res.status(201).json({ message: 'Follow toggled!' })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
 module.exports = router
