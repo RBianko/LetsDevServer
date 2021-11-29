@@ -40,7 +40,7 @@ router.put('/update', (req, res) => {
         }
 
         User.updateOne({ _id }, { $set: user }, async (error) => {
-            if (error) return await res.status(200).json({ message: 'Error in User.updateOne!' })
+            if (error) return await res.status(400).json({ message: 'Error in User.updateOne!' })
         })
 
         res.status(201).json({ message: 'User updated!' })
@@ -53,13 +53,20 @@ router.put('/update', (req, res) => {
 router.get('/list', async (req, res) => {
     try {
         let users = []
-        if (req.query.ids) {
+        if (req.query.ids?.length > 0) {
             const idsArray = req.query.ids
             users = await User.find({ _id: { $in: idsArray } }, { email: 0, password: 0, __v: 0 })
-        } else {
-            users = await User.find({}, { email: 0, password: 0, __v: 0 })
         }
-        res.json(users)
+        res.status(200).json(users)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+router.get('/all', async (req, res) => {
+    try {
+        const users = await User.find({}, { email: 0, password: 0, __v: 0 })
+        res.status(200).json(users)
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -83,9 +90,7 @@ router.put('/follow', async (req, res) => {
         } = req.body.params.ids
 
         const follower = await User.find({ _id: followerId })
-        console.log(follower[0]);
         const isFollowing = follower[0].follow.following.some(id => id === followingId)
-        console.log(isFollowing);
 
         if (isFollowing) {
             await User.updateOne({ _id: followerId }, { $pull: { "follow.following": followingId } })
