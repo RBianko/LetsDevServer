@@ -2,7 +2,7 @@ const { Schema, model, Types } = require('mongoose')
 
 const schema = new Schema({
     title: { type: String, default: "New Project" },
-    projectPicture: { type: String, default: "/static/media/project.6ff02d0d.svg" },
+    picture: { type: String, default: "/static/media/project.6ff02d0d.svg" },
     status: { type: String, default: "Active" },
     description: { type: String, default: "" },
     skills: { type: Array, default: [] },
