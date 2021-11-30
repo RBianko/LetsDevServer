@@ -40,7 +40,7 @@ router.put('/update', (req, res) => {
         }
 
         User.updateOne({ _id }, { $set: user }, async (error) => {
-            if (error) return await res.status(400).json({ message: 'Error in User.updateOne!' })
+            if (error) return res.status(400).json({ message: 'Error in User.updateOne!' })
         })
 
         res.status(201).json({ message: 'User updated!' })
@@ -100,7 +100,7 @@ router.put('/follow', async (req, res) => {
             await User.updateOne({ _id: followingId }, { $push: { "follow.followers": followerId } })
         }
 
-        res.status(201).json({ message: 'Follow toggled!' })
+        res.status(201).json(followingId)
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
