@@ -136,10 +136,9 @@ router.put('/approve', async (req, res) => {
             _id: userId,
             role: forRole
         }
-
-        // TODO add project id to user.findOne
-
         project.devs.push(newDev)
+
+        await User.updateOne({ _id: userId }, { $push: { projects: projectId } })
         await project.save()
 
         res.json({ message: 'Request approved!' })
