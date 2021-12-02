@@ -63,9 +63,16 @@ router.get('/list', async (req, res) => {
     }
 })
 
+// api/users/all
 router.get('/all', async (req, res) => {
+    let pageNumber = 0
+    let nPerPage = 20
     try {
         const users = await User.find({}, { email: 0, password: 0, __v: 0 })
+            .sort({ firstName: 1 })
+            .skip(pageNumber > 0 ? ((pageNumber - 1) * nPerPage) : 0)
+            .limit(nPerPage)
+
         res.status(200).json(users)
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -82,6 +89,7 @@ router.get('/', async (req, res) => {
     }
 })
 
+// api/users/follow
 router.put('/follow', async (req, res) => {
     try {
         const {

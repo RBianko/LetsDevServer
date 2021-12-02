@@ -17,6 +17,7 @@ router.post('/create', async (req, res) => {
             title,
             status,
             description,
+            link,
             skills,
             needList,
             picture,
@@ -28,6 +29,7 @@ router.post('/create', async (req, res) => {
             title,
             status,
             description,
+            link,
             skills,
             needList,
             picture,
@@ -51,6 +53,7 @@ router.put('/update', (req, res) => {
             title,
             status,
             description,
+            link,
             skills,
             needList,
             picture
@@ -60,6 +63,7 @@ router.put('/update', (req, res) => {
             title,
             status,
             description,
+            link,
             skills,
             needList,
             picture
@@ -79,13 +83,27 @@ router.put('/update', (req, res) => {
 router.get('/list', async (req, res) => {
     try {
         let projects = []
-        if (req.query.ids) {
+        if (req.query.ids?.length > 0) {
             const idsArray = req.query.ids
             projects = await Project.find({ _id: { $in: idsArray } }, { __v: 0 })
-        } else {
-            projects = await Project.find({}, { __v: 0 })
         }
-        res.json(projects)
+        res.status(200).json(projects)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+// api/projects/all
+router.get('/all', async (req, res) => {
+    let pageNumber = 0 // req.query.page
+    let nPerPage = 10
+    try {
+        const projects = await Project.find({}, { __v: 0 })
+            .sort({ title: 1 })
+            .skip(pageNumber > 0 ? ((pageNumber - 1) * nPerPage) : 0)
+            .limit(nPerPage)
+
+        res.status(200).json(projects)
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
