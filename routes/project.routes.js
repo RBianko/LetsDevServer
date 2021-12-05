@@ -6,7 +6,7 @@ const router = Router()
 router.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "http://localhost:3000");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    res.header("Access-Control-Allow-Methods", "PUT, POST, OPTIONS");
+    res.header("Access-Control-Allow-Methods", "PUT, POST, DELETE, OPTIONS");
     next();
 });
 
@@ -74,6 +74,24 @@ router.put('/update', (req, res) => {
         })
 
         res.status(201).json({ message: 'Project updated!' })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+// api/projects/delete
+router.delete('/delete', async (req, res) => {
+    try {
+        const id = req.query.id
+        const project = await Project.findById(id)
+        const users = project.devs.map(dev => dev._id)
+
+        users.forEach(async (user) =>
+            await User.updateOne({ _id: user }, { $pull: { projects: id } })
+        )
+
+        project.remove()
+        res.status(201).json({ message: 'Project deleted!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
