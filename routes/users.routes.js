@@ -1,13 +1,11 @@
 const { Router } = require('express')
 const User = require('../models/User')
 const router = Router()
+const corsMiddleware = require('../meddlewares/corsMiddleware')
 
-router.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    res.header("Access-Control-Allow-Methods", "PUT, OPTIONS");
-    next();
-});
+
+const methods = "PUT, OPTIONS"
+router.use((req, res, next) => corsMiddleware(req, res, next, methods));
 
 // api/users/update
 router.put('/update', (req, res) => {
@@ -83,7 +81,7 @@ router.get('/all', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const user = await User.find({ _id: req.query.id }, { email: 0, password: 0, __v: 0 })
-        res.json(user)
+        res.status(200).json(user)
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -108,7 +106,7 @@ router.put('/follow', async (req, res) => {
             await User.updateOne({ _id: followingId }, { $push: { "follow.followers": followerId } })
         }
 
-        res.status(201).json(followingId)
+        res.status(200).json(followingId)
     } catch (error) {
         res.status(500).json({ message: error.message })
     }

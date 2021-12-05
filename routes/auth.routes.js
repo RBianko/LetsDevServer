@@ -5,12 +5,10 @@ const jwt = require('jsonwebtoken')
 const { check, validationResult } = require('express-validator')
 const User = require('../models/User')
 const router = Router()
+const corsMiddleware = require('../meddlewares/corsMiddleware')
 
-router.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
+const methods = "POST, OPTIONS"
+router.use((req, res, next) => corsMiddleware(req, res, next, methods));
 
 // /api/login
 router.post(
@@ -81,10 +79,10 @@ router.post('/authorization',
             const token = jwt.sign(
                 { _id: user.id },
                 config.get('jwtSecret'),
-                { expiresIn: '1h' }
+                { expiresIn: config.get('expiresIn') },
             )
 
-            res.json({ token, _id: user.id })
+            res.status(200).json({ token, _id: user.id })
         } catch (error) {
             res.status(500).json({ message: error.message })
         }

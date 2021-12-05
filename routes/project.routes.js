@@ -2,13 +2,10 @@ const { Router } = require('express')
 const Project = require('../models/Project')
 const User = require('../models/User')
 const router = Router()
+const corsMiddleware = require('../meddlewares/corsMiddleware')
 
-router.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    res.header("Access-Control-Allow-Methods", "PUT, POST, DELETE, OPTIONS");
-    next();
-});
+const methods = "PUT, POST, DELETE, OPTIONS"
+router.use((req, res, next) => corsMiddleware(req, res, next, methods));
 
 // api/projects/create
 router.post('/create', async (req, res) => {
@@ -73,7 +70,7 @@ router.put('/update', (req, res) => {
             if (error) return res.status(400).json({ message: 'Error in Project.updateOne!' })
         })
 
-        res.status(201).json({ message: 'Project updated!' })
+        res.status(200).json({ message: 'Project updated!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -91,7 +88,7 @@ router.delete('/delete', async (req, res) => {
         )
 
         project.remove()
-        res.status(201).json({ message: 'Project deleted!' })
+        res.status(200).json({ message: 'Project deleted!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -128,10 +125,13 @@ router.get('/all', async (req, res) => {
 })
 
 // api/projects/:id
+
+
+
 router.get('/', async (req, res) => {
     try {
         const project = await Project.findById(req.query.id)
-        res.json(project)
+        res.status(200).json(project)
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -150,7 +150,7 @@ router.put('/apply', async (req, res) => {
         project.requests.push(newRequest)
         await project.save()
 
-        res.json({ message: 'New request send!' })
+        res.status(200).json({ message: 'New request send!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -177,7 +177,7 @@ router.put('/approve', async (req, res) => {
         await User.updateOne({ _id: userId }, { $push: { projects: projectId } })
         await project.save()
 
-        res.json({ message: 'Request approved!' })
+        res.status(200).json({ message: 'Request approved!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -193,7 +193,7 @@ router.put('/decline', async (req, res) => {
         project.requests.splice(declineRequestId, 1) //delete request
         await project.save()
 
-        res.json({ message: 'Request declined!' })
+        res.status(200).json({ message: 'Request declined!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
