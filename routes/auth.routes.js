@@ -1,11 +1,10 @@
 const { Router } = require('express')
 const bcrypt = require('bcryptjs')
-const config = require('config')
-const jwt = require('jsonwebtoken')
 const { check, validationResult } = require('express-validator')
 const User = require('../models/User')
 const router = Router()
 const corsMiddleware = require('../meddlewares/corsMiddleware')
+const generateJwt = require('../helpers/generateJwt')
 
 const methods = "POST, OPTIONS"
 router.use((req, res, next) => corsMiddleware(req, res, next, methods));
@@ -76,11 +75,7 @@ router.post('/authorization',
                 return res.status(400).json({ message: 'Invalid Password' })
             }
 
-            const token = jwt.sign(
-                { _id: user.id },
-                config.get('jwtSecret'),
-                { expiresIn: config.get('expiresIn') },
-            )
+            const token = generateJwt(user.id)
 
             res.status(200).json({ token, _id: user.id })
         } catch (error) {

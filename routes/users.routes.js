@@ -1,6 +1,7 @@
 const { Router } = require('express')
 const User = require('../models/User')
 const router = Router()
+const config = require('config')
 const corsMiddleware = require('../meddlewares/corsMiddleware')
 
 
@@ -63,12 +64,13 @@ router.get('/list', async (req, res) => {
 
 // api/users/all
 router.get('/all', async (req, res) => {
-    let pageNumber = 0
-    let nPerPage = 20
+    let pageNumber = 1 // req.query.page
+    let nPerPage = config.get('usersPerPage')
+    let prevPagesCount = (pageNumber - 1) * nPerPage
     try {
         const users = await User.find({}, { email: 0, password: 0, __v: 0 })
             .sort({ firstName: 1 })
-            .skip(pageNumber > 0 ? ((pageNumber - 1) * nPerPage) : 0)
+            .skip(pageNumber > 1 ? prevPagesCount : 0)
             .limit(nPerPage)
 
         res.status(200).json(users)

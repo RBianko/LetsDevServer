@@ -2,6 +2,7 @@ const { Router } = require('express')
 const Project = require('../models/Project')
 const User = require('../models/User')
 const router = Router()
+const config = require('config')
 const corsMiddleware = require('../meddlewares/corsMiddleware')
 
 const methods = "PUT, POST, DELETE, OPTIONS"
@@ -81,10 +82,11 @@ router.delete('/delete', async (req, res) => {
     try {
         const id = req.query.id
         const project = await Project.findById(id)
-        const users = project.devs.map(dev => dev._id)
 
-        users.forEach(async (user) =>
-            await User.updateOne({ _id: user }, { $pull: { projects: id } })
+        const users = project.devs.map(dev => dev._id)
+        await User.updateMany(
+            { _id: { $in: users } },
+            { $set: { $pull: { projects: id } } }
         )
 
         project.remove()
@@ -110,12 +112,14 @@ router.get('/list', async (req, res) => {
 
 // api/projects/all
 router.get('/all', async (req, res) => {
-    let pageNumber = 0 // req.query.page
-    let nPerPage = 10
+    let pageNumber = 1 // req.query.page
+    let nPerPage = config.get('projectsPerPage')
+    let prevPagesCount = (pageNumber - 1) * nPerPage
+
     try {
         const projects = await Project.find({}, { __v: 0 })
             .sort({ title: 1 })
-            .skip(pageNumber > 0 ? ((pageNumber - 1) * nPerPage) : 0)
+            .skip(pageNumber > 1 ? prevPagesCount : 0)
             .limit(nPerPage)
 
         res.status(200).json(projects)
@@ -125,9 +129,6 @@ router.get('/all', async (req, res) => {
 })
 
 // api/projects/:id
-
-
-
 router.get('/', async (req, res) => {
     try {
         const project = await Project.findById(req.query.id)

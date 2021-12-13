@@ -2,5 +2,7 @@
   "PORT": 4000,
   "jwtSecret": "letsDevSecret",
   "mongoUrl": "mongodb+srv://romanbianko:123qwe@cluster0.ocu78.mongodb.net/app?retryWrites=true&w=majority",
-  "expiresIn": "1h"
+  "expiresIn": "1h",
+  "usersPerPage": "20",
+  "projectsPerPage": "10"
 }
