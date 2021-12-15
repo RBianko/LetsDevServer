@@ -4,9 +4,12 @@ const User = require('../models/User')
 const router = Router()
 const config = require('config')
 const corsMiddleware = require('../meddlewares/corsMiddleware')
+const updateUser = require('../actions/updateUser')
+const updateProject = require('../actions/updateProject')
 
 const methods = "PUT, POST, DELETE, OPTIONS"
 router.use((req, res, next) => corsMiddleware(req, res, next, methods));
+
 
 // api/projects/create
 router.post('/create', async (req, res) => {
