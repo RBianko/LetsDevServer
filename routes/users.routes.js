@@ -1,13 +1,11 @@
 const { Router } = require('express')
 const router = Router()
 
-const corsMiddleware = require('../meddlewares/corsMiddleware')
-const updateUser = require('../actions/updateUser')
-const findUser = require('../actions/findUser')
-const findUsersPage = require('../actions/findUsersPage')
+const cors = require('../middlewares/cors')
+const { updateUser, findUser, findUsersPage } = require('../actions/user')
 
 const methods = "PUT, OPTIONS"
-router.use((req, res, next) => corsMiddleware(req, res, next, methods));
+router.use((req, res, next) => cors(req, res, next, methods));
 
 
 // api/users/update

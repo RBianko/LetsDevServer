@@ -2,15 +2,16 @@ const { Router } = require('express')
 const router = Router()
 
 const User = require('../models/User')
+
 const bcrypt = require('bcryptjs')
 const { check, validationResult } = require('express-validator')
 
-const corsMiddleware = require('../meddlewares/corsMiddleware')
+const cors = require('../middlewares/cors')
 const generateJwt = require('../helpers/generateJwt')
-const findUser = require('../actions/findUser')
+const { findUser } = require('../actions/user')
 
 const methods = "POST, OPTIONS"
-router.use((req, res, next) => corsMiddleware(req, res, next, methods));
+router.use((req, res, next) => cors(req, res, next, methods));
 
 
 // /api/login
@@ -32,12 +33,9 @@ router.post(
             }
 
             const { email, password } = req.body
-            const findResult = await findUser({ email })
-            const candidate = findResult[0]
 
-            if (candidate) {
-                return res.status(400).json({ message: 'User already exists' })
-            }
+            const findResult = await findUser({ email })
+            if (findResult.length) return res.status(400).json({ message: 'User already exists' })
 
             const hashedPassword = await bcrypt.hash(password, 12)
             const user = new User({ email, password: hashedPassword })
@@ -70,12 +68,9 @@ router.post('/authorization',
             const { email, password } = req.body
 
             const findResult = await findUser({ email }, 1)
+            if (!findResult.length) return res.status(400).json({ message: 'User not found' })
+
             const user = findResult[0]
-
-            if (!user) {
-                return res.status(400).json({ message: 'User not found' })
-            }
-
             const isMatch = await bcrypt.compare(password, user.password)
 
             if (!isMatch) {

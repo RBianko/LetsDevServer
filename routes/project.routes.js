@@ -3,15 +3,12 @@ const router = Router()
 
 const Project = require('../models/Project')
 
-const corsMiddleware = require('../meddlewares/corsMiddleware')
-const updateUser = require('../actions/updateUser')
-const updateUsers = require('../actions/updateUsers')
-const updateProject = require('../actions/updateProject')
-const findProject = require('../actions/findProject')
-const findProjectsPage = require('../actions/findProjectsPage')
+const cors = require('../middlewares/cors')
+const { updateUser, updateUsers } = require('../actions/user')
+const { updateProject, findProject, findProjectsPage } = require('../actions/project')
 
 const methods = "PUT, POST, DELETE, OPTIONS"
-router.use((req, res, next) => corsMiddleware(req, res, next, methods));
+router.use((req, res, next) => cors(req, res, next, methods));
 
 
 // api/projects/create
@@ -40,8 +37,10 @@ router.post('/create', async (req, res) => {
             requests,
             devs
         })
+
         const creatorId = devs[0]._id
         await updateUser({ _id: creatorId }, { $push: { projects: project._id.toString() } })
+
         await project.save()
         res.status(201).json({ message: 'Project created!' })
     } catch (error) {
@@ -84,7 +83,9 @@ router.put('/update', (req, res) => {
 router.delete('/delete', async (req, res) => {
     try {
         const id = req.query.id
+
         const findResult = await findProject({ _id: id })
+        if (!findResult.length) return res.status(400).json({ message: 'Project not found' })
         const project = findResult[0]
 
         const users = project.devs.map(dev => dev._id)
@@ -135,7 +136,9 @@ router.get('/', async (req, res) => {
 router.put('/apply', async (req, res) => {
     try {
         const { projectId, userId, forRole } = req.body.params.request
+
         const findResult = await findProject({ _id: projectId })
+        if (!findResult.length) return res.status(400).json({ message: 'Project not found' })
         const project = findResult[0]
 
         const newRequest = {
@@ -156,7 +159,9 @@ router.put('/apply', async (req, res) => {
 router.put('/approve', async (req, res) => {
     try {
         const { projectId, requestId, forRole, userId } = req.body.params.request
+
         const findResult = await findProject({ _id: projectId })
+        if (!findResult.length) return res.status(400).json({ message: 'Project not found' })
         const project = findResult[0]
 
         const requestIndex = project.requests.findIndex(request => request.id === requestId)
@@ -183,7 +188,9 @@ router.put('/approve', async (req, res) => {
 router.put('/decline', async (req, res) => {
     try {
         const { projectId, requestId } = req.body.params.request
+
         const findResult = await findProject({ _id: projectId })
+        if (!findResult.length) return res.status(400).json({ message: 'Project not found' })
         const project = findResult[0]
 
         const declineRequestId = project.requests.findIndex(request => request.id === requestId)
