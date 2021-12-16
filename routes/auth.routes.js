@@ -1,13 +1,17 @@
 const { Router } = require('express')
+const router = Router()
+
+const User = require('../models/User')
 const bcrypt = require('bcryptjs')
 const { check, validationResult } = require('express-validator')
-const User = require('../models/User')
-const router = Router()
+
 const corsMiddleware = require('../meddlewares/corsMiddleware')
 const generateJwt = require('../helpers/generateJwt')
+const findUser = require('../actions/findUser')
 
 const methods = "POST, OPTIONS"
 router.use((req, res, next) => corsMiddleware(req, res, next, methods));
+
 
 // /api/login
 router.post(
@@ -28,7 +32,9 @@ router.post(
             }
 
             const { email, password } = req.body
-            const candidate = await User.findOne({ email })
+            const findResult = await findUser({ email })
+            const candidate = findResult[0]
+
             if (candidate) {
                 return res.status(400).json({ message: 'User already exists' })
             }
@@ -63,7 +69,8 @@ router.post('/authorization',
 
             const { email, password } = req.body
 
-            const user = await User.findOne({ email })
+            const findResult = await findUser({ email }, 1)
+            const user = findResult[0]
 
             if (!user) {
                 return res.status(400).json({ message: 'User not found' })

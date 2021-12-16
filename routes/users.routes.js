@@ -1,9 +1,10 @@
 const { Router } = require('express')
-const User = require('../models/User')
 const router = Router()
-const config = require('config')
+
 const corsMiddleware = require('../meddlewares/corsMiddleware')
 const updateUser = require('../actions/updateUser')
+const findUser = require('../actions/findUser')
+const findUsersPage = require('../actions/findUsersPage')
 
 const methods = "PUT, OPTIONS"
 router.use((req, res, next) => corsMiddleware(req, res, next, methods));
@@ -52,7 +53,7 @@ router.get('/list', async (req, res) => {
         let users = []
         if (req.query.ids?.length > 0) {
             const idsArray = req.query.ids
-            users = await User.find({ _id: { $in: idsArray } }, { email: 0, password: 0, __v: 0 })
+            users = await findUser({ _id: { $in: idsArray } })
         }
         res.status(200).json(users)
     } catch (error) {
@@ -62,15 +63,8 @@ router.get('/list', async (req, res) => {
 
 // api/users/all
 router.get('/all', async (req, res) => {
-    let pageNumber = 1 // req.query.page
-    let nPerPage = config.get('usersPerPage')
-    let prevPagesCount = (pageNumber - 1) * nPerPage
     try {
-        const users = await User.find({}, { email: 0, password: 0, __v: 0 })
-            .sort({ firstName: 1 })
-            .skip(pageNumber > 1 ? prevPagesCount : 0)
-            .limit(nPerPage)
-
+        const users = await findUsersPage({}, { email: 0, password: 0, __v: 0 })  // req.query.page
         res.status(200).json(users)
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -80,7 +74,7 @@ router.get('/all', async (req, res) => {
 // api/users/:id
 router.get('/', async (req, res) => {
     try {
-        const user = await User.find({ _id: req.query.id }, { email: 0, password: 0, __v: 0 })
+        const user = await findUser({ _id: req.query.id })
         res.status(200).json(user)
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -95,7 +89,7 @@ router.put('/follow', async (req, res) => {
             followingId,
         } = req.body.params.ids
 
-        const follower = await User.find({ _id: followerId })
+        const follower = await findUser({ _id: followerId })
         const isFollowing = follower[0].follow.following.some(id => id === followingId)
 
         if (isFollowing) {

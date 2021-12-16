@@ -1,11 +1,14 @@
 const { Router } = require('express')
-const Project = require('../models/Project')
-const User = require('../models/User')
 const router = Router()
-const config = require('config')
+
+const Project = require('../models/Project')
+
 const corsMiddleware = require('../meddlewares/corsMiddleware')
 const updateUser = require('../actions/updateUser')
+const updateUsers = require('../actions/updateUsers')
 const updateProject = require('../actions/updateProject')
+const findProject = require('../actions/findProject')
+const findProjectsPage = require('../actions/findProjectsPage')
 
 const methods = "PUT, POST, DELETE, OPTIONS"
 router.use((req, res, next) => corsMiddleware(req, res, next, methods));
@@ -38,7 +41,7 @@ router.post('/create', async (req, res) => {
             devs
         })
         const creatorId = devs[0]._id
-        await User.updateOne({ _id: creatorId }, { $push: { projects: project._id.toString() } })
+        await updateUser({ _id: creatorId }, { $push: { projects: project._id.toString() } })
         await project.save()
         res.status(201).json({ message: 'Project created!' })
     } catch (error) {
@@ -70,10 +73,7 @@ router.put('/update', (req, res) => {
             picture
         }
 
-        Project.updateOne({ _id }, { $set: project }, async (error) => {
-            if (error) return res.status(400).json({ message: 'Error in Project.updateOne!' })
-        })
-
+        updateProject({ _id }, { $set: project })
         res.status(200).json({ message: 'Project updated!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -84,13 +84,11 @@ router.put('/update', (req, res) => {
 router.delete('/delete', async (req, res) => {
     try {
         const id = req.query.id
-        const project = await Project.findById(id)
+        const findResult = await findProject({ _id: id })
+        const project = findResult[0]
 
         const users = project.devs.map(dev => dev._id)
-        await User.updateMany(
-            { _id: { $in: users } },
-            { $set: { $pull: { projects: id } } }
-        )
+        await updateUsers({ _id: { $in: users } }, { $set: { $pull: { projects: id } } })
 
         project.remove()
         res.status(200).json({ message: 'Project deleted!' })
@@ -105,7 +103,7 @@ router.get('/list', async (req, res) => {
         let projects = []
         if (req.query.ids?.length > 0) {
             const idsArray = req.query.ids
-            projects = await Project.find({ _id: { $in: idsArray } }, { __v: 0 })
+            projects = await findProject({ _id: { $in: idsArray } })
         }
         res.status(200).json(projects)
     } catch (error) {
@@ -115,16 +113,8 @@ router.get('/list', async (req, res) => {
 
 // api/projects/all
 router.get('/all', async (req, res) => {
-    let pageNumber = 1 // req.query.page
-    let nPerPage = config.get('projectsPerPage')
-    let prevPagesCount = (pageNumber - 1) * nPerPage
-
     try {
-        const projects = await Project.find({}, { __v: 0 })
-            .sort({ title: 1 })
-            .skip(pageNumber > 1 ? prevPagesCount : 0)
-            .limit(nPerPage)
-
+        const projects = await findProjectsPage(1) // req.query.page
         res.status(200).json(projects)
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -134,7 +124,7 @@ router.get('/all', async (req, res) => {
 // api/projects/:id
 router.get('/', async (req, res) => {
     try {
-        const project = await Project.findById(req.query.id)
+        const project = await findProject({ _id: req.query.id })
         res.status(200).json(project)
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -145,15 +135,17 @@ router.get('/', async (req, res) => {
 router.put('/apply', async (req, res) => {
     try {
         const { projectId, userId, forRole } = req.body.params.request
-        const project = await Project.findById(projectId)
+        const findResult = await findProject({ _id: projectId })
+        const project = findResult[0]
+
         const newRequest = {
             requestId: project.requests.length.toString(),
             _id: userId,
             forRole
         }
+
         project.requests.push(newRequest)
         await project.save()
-
         res.status(200).json({ message: 'New request send!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -164,7 +156,8 @@ router.put('/apply', async (req, res) => {
 router.put('/approve', async (req, res) => {
     try {
         const { projectId, requestId, forRole, userId } = req.body.params.request
-        const project = await Project.findById(projectId)
+        const findResult = await findProject({ _id: projectId })
+        const project = findResult[0]
 
         const requestIndex = project.requests.findIndex(request => request.id === requestId)
         project.requests.splice(requestIndex, 1) //delete request
@@ -178,9 +171,8 @@ router.put('/approve', async (req, res) => {
         }
         project.devs.push(newDev)
 
-        await User.updateOne({ _id: userId }, { $push: { projects: projectId } })
+        await updateUser({ _id: userId }, { $push: { projects: projectId } })
         await project.save()
-
         res.status(200).json({ message: 'Request approved!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -191,12 +183,13 @@ router.put('/approve', async (req, res) => {
 router.put('/decline', async (req, res) => {
     try {
         const { projectId, requestId } = req.body.params.request
-        const project = await Project.findById(projectId)
+        const findResult = await findProject({ _id: projectId })
+        const project = findResult[0]
 
         const declineRequestId = project.requests.findIndex(request => request.id === requestId)
         project.requests.splice(declineRequestId, 1) //delete request
-        await project.save()
 
+        await project.save()
         res.status(200).json({ message: 'Request declined!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
