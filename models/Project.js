@@ -1,15 +1,15 @@
 const { Schema, model, Types } = require('mongoose')
 
 const schema = new Schema({
-    id: { type: String, required: true },
-    title: { type: String, required: true },
-    projectPicture: { type: String, required: true },
-    status: { type: String, required: true },
-    description: { type: String, required: true },
-    skills: { type: Array, required: true },
-    devs: { type: Array, required: true },
-    requests: { type: Array, required: true },
-    needList: { type: Array, required: true },
+    title: { type: String, default: "New Project" },
+    picture: { type: String, default: "/static/media/project.6ff02d0d.svg" },
+    status: { type: String, default: "Active" },
+    description: { type: String, default: "" },
+    link: { type: String, default: "" },
+    skills: { type: Array, default: [] },
+    devs: { type: Array, default: [] },
+    requests: { type: Array, default: [] },
+    needList: { type: Array, default: [] },
 })
 
 module.exports = model('Project', schema)

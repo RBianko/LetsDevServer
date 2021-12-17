@@ -1,10 +1,18 @@
 const { Router } = require('express')
-const bcrypt = require('bcryptjs')
-const config = require('config')
-const jwt = require('jsonwebtoken')
-const { check, validationResult } = require('express-validator')
-const User = require('../models/User')
 const router = Router()
+
+const User = require('../models/User')
+
+const bcrypt = require('bcryptjs')
+const { check, validationResult } = require('express-validator')
+
+const cors = require('../middlewares/cors')
+const generateJwt = require('../helpers/generateJwt')
+const { findUser } = require('../actions/user')
+
+const methods = "POST, OPTIONS"
+router.use((req, res, next) => cors(req, res, next, methods));
+
 
 // /api/login
 router.post(
@@ -25,10 +33,9 @@ router.post(
             }
 
             const { email, password } = req.body
-            const candidate = await User.findOne({ email })
-            if (candidate) {
-                return res.status(400).json({ message: 'User already exists' })
-            }
+
+            const findResult = await findUser({ email })
+            if (findResult.length) return res.status(400).json({ message: 'User already exists' })
 
             const hashedPassword = await bcrypt.hash(password, 12)
             const user = new User({ email, password: hashedPassword })
@@ -60,26 +67,19 @@ router.post('/authorization',
 
             const { email, password } = req.body
 
-            const user = await User.findOne({ email })
+            const findResult = await findUser({ email }, 1)
+            if (!findResult.length) return res.status(400).json({ message: 'User not found' })
 
-            if (!user) {
-                return res.status(400).json({ message: 'User not found' })
-            }
-
+            const user = findResult[0]
             const isMatch = await bcrypt.compare(password, user.password)
 
             if (!isMatch) {
                 return res.status(400).json({ message: 'Invalid Password' })
             }
 
-            const token = jwt.sign(
-                { userId: user.id },
-                config.get('jwtSecret'),
-                { expiresIn: '1h' }
-            )
+            const token = generateJwt(user.id)
 
-            res.json({ token, userId: user.id })
-
+            res.status(200).json({ token, _id: user.id })
         } catch (error) {
             res.status(500).json({ message: error.message })
         }
