@@ -23,10 +23,10 @@ const schema = new Schema({
     },
     socials: {
         type: Object, required: false, default: {
-            vk: null,
-            facebook: null,
-            linkedin: null,
-            github: null,
+            vk: "",
+            facebook: "",
+            linkedin: "",
+            github: "",
         }
     },
 })
